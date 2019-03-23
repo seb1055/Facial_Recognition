@@ -12,14 +12,15 @@ CascadeClassifier face_cascade;
 CascadeClassifier eyes_cascade;
 
 String window_name = "Capture - Face detection";
+String window_zoom = "Zoomed";
 int main( int argc, const char** argv )
 {
     VideoCapture capture;
 
 
 
-    face_cascade.load("/home/seb/Projects/facerec/haarcascade_frontalface_alt.xml");
-    eyes_cascade.load("/home/seb/Projects/facerec/haarcascade_eye_tree_eyeglasses.xml");
+    face_cascade.load("/home/seb/Projects/Greeter_OpenFace/haarcascade_frontalface_alt.xml");
+    eyes_cascade.load("/home/seb/Projects/Greeter_OpenFace/haarcascade_eye_tree_eyeglasses.xml");
 
     startCapture(capture);
 
@@ -50,6 +51,7 @@ void detectAndDisplay( Mat frame )
 {
     std::vector<Rect> faces;
     Mat frame_gray;
+    Mat frame_zoom = frame;
     cvtColor( frame, frame_gray, COLOR_BGR2GRAY );
     equalizeHist( frame_gray, frame_gray );
     //-- Detect faces
@@ -59,6 +61,10 @@ void detectAndDisplay( Mat frame )
         Point p1(faces[i].x, faces[i].y);
         Point p2(faces[i].x + faces[i].width, faces[i].y + faces[i].height);
         rectangle(frame, p1,p2, Scalar(255,0,255),4 , 8 , 0);
+
+        //NOT GOOD PRAC FIND BETTER
+        if(faces[i].width > 0)
+            frame_zoom = frame(Rect2d(faces[i].x,faces[i].y,faces[i].width,faces[i].height));
 
         Mat faceROI = frame_gray( faces[i] );
         std::vector<Rect> eyes;
@@ -73,4 +79,5 @@ void detectAndDisplay( Mat frame )
     }
     //-- Show what you got
     imshow( window_name, frame );
+    imshow(window_zoom,frame_zoom);
 }
