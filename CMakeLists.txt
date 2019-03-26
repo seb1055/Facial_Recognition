@@ -5,6 +5,6 @@ set(CMAKE_CXX_STANDARD 14)
 
 find_package( OpenCV REQUIRED )
 
-add_executable(Greeter_OpenFace main.cpp)
+add_executable(Greeter_OpenFace main.cpp FaceDetector.cpp FaceDetector.h Face.cpp Face.h)
 
 target_link_libraries( Greeter_OpenFace ${OpenCV_LIBS} )

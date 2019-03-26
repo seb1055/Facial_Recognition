@@ -1,34 +1,36 @@
 #include "opencv2/objdetect.hpp"
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgproc.hpp"
-#include "opencv2/core.hpp"
 #include "opencv2/face.hpp"
 #include <opencv2/core_detect.hpp>
 
 
-#include <stdio.h>
-#include <iostream>
 #include <iostream>
 #include <fstream>
-#include <sstream>
 
 using namespace std;
 using namespace cv;
 using namespace cv::face;
 
+
 void detectAndDisplay( Mat frame );
 void startCapture(VideoCapture capture);
+
+void loadModel(string filepath);
 static void read_csv(const string& filename, vector<Mat>& images, vector<int>& labels, char separator = ';');
-void reconizeFace(Mat frame , vector<Mat> face_images, vector<int> labels);
+
+string reconizeFace(Mat frame);
 static Mat norm_0_255(InputArray _src);
 
 CascadeClassifier face_cascade;
 CascadeClassifier eyes_cascade;
 
-String window_name = "Capture - Face detection";
-String window_zoom = "Zoomed";
+String window_name = "Face Capture";
 vector<Mat> images;
 vector<int> labels;
+Ptr<EigenFaceRecognizer> model = EigenFaceRecognizer::create();
+
+
 
 int main( int argc, const char** argv )
 {
@@ -37,17 +39,23 @@ int main( int argc, const char** argv )
     //use for facial rec
     face_cascade.load("/home/seb/Projects/Greeter_OpenFace/haarcascade_frontalface_alt.xml");
     eyes_cascade.load("/home/seb/Projects/Greeter_OpenFace/haarcascade_eye_tree_eyeglasses.xml");
+    loadModel("/home/seb/Desktop/seb_faces/faces.csv");
 
-    read_csv("/home/seb/Desktop/seb_faces/faces.csv",images,labels);
 
     startCapture(capture);
 
     return 0;
 }
 
+void loadModel(const string filepath) {
+    read_csv(filepath, images, labels);
+    model->train(images, labels);
+    cout << "Model Trained" << endl;
+}
 void startCapture(VideoCapture capture){
     Mat frame;
     capture.open( 0 );
+
     if ( ! capture.isOpened() ) { printf("--(!)Error opening video capture\n"); exit(-1);}
     while ( capture.read(frame) )
     {
@@ -70,6 +78,7 @@ void detectAndDisplay( Mat frame )
     std::vector<Rect> faces;
     Mat frame_gray;
     Mat frame_zoom = frame;
+    string person_name;
 
     cvtColor( frame, frame_gray, COLOR_BGR2GRAY );
     equalizeHist( frame_gray, frame_gray );
@@ -81,12 +90,17 @@ void detectAndDisplay( Mat frame )
         Point p2(faces[i].x + faces[i].width, faces[i].y + faces[i].height);
 
 
+
         //NOT GOOD PRAC FIND BETTER
         if(faces[i].width > 0 ) {
             frame_zoom = frame(Rect2d(faces[i].x, faces[i].y, faces[i].width, faces[i].height));
+
+            frame_zoom.copyTo(frame(Rect(0, 0, frame_zoom.rows, frame_zoom.cols)));
+            person_name = reconizeFace(frame);
         }
 
         rectangle(frame, p1,p2, Scalar(255,0,255),4 , 8 , 0);
+        putText(frame, person_name, p1, FONT_HERSHEY_SIMPLEX, 1, Scalar(97, 255, 0), 2);
 
 
         Mat faceROI = frame_gray( faces[i] );
@@ -100,28 +114,33 @@ void detectAndDisplay( Mat frame )
             circle( frame, eye_center, radius, Scalar( 255, 0, 0 ), 4, 8, 0 );
         }
 
-        reconizeFace(norm_0_255(frame),images,labels);
+
     }
     //-- Show what you got
     imshow( window_name, frame );
-    imshow(window_zoom,frame_zoom);
+
 }
 
-void reconizeFace(Mat frame , vector<Mat> face_images, vector<int> labels){
+string reconizeFace(Mat frame) {
 
 
-    Ptr<EigenFaceRecognizer> model = EigenFaceRecognizer::create();
-
-    frame = norm_0_255(frame);
-
-    model -> train(face_images,labels);
-
-    int predictedlabel = model -> predict(frame);
-
-    string result = format("Predicted class = %d \n", predictedlabel);
-    cout << result;
+    Mat testimg = norm_0_255(frame);
 
 
+    int predictedlabel = model->predict(testimg);
+
+    switch (predictedlabel) {
+        case 0:
+            return "SEB";
+
+        case 1:
+            return "CHASE";
+
+
+        default:
+            return "N/A";
+
+    }
 }
 
 
@@ -137,7 +156,7 @@ static void read_csv(const string& filename, vector<Mat>& images, vector<int>& l
         getline(liness, path, separator);
         getline(liness, classlabel);
         if(!path.empty() && !classlabel.empty()) {
-            images.push_back(norm_0_255(imread(path, 0)));
+            images.push_back(norm_0_255(imread(path, 1)));
             labels.push_back(atoi(classlabel.c_str()));
         }
     }
@@ -148,21 +167,8 @@ static Mat norm_0_255(InputArray _src) {
     Mat src = _src.getMat();
     // Create and return normalized image:
     Mat dst;
-
-    Size size(640,800);
-    resize(_src,dst,size);
-
-    switch(src.channels()) {
-        case 1:
-            cv::normalize(_src, dst, 0, 255, NORM_MINMAX, CV_8UC1);
-
-            break;
-        case 3:
-            cv::normalize(_src, dst, 0, 255, NORM_MINMAX, CV_8UC3);
-            break;
-        default:
-            src.copyTo(dst);
-            break;
-    }
+    Size size(640, 480);
+    resize(src, dst, size);
+    cvtColor(_src, dst, COLOR_BGR2GRAY);
     return dst;
 }
