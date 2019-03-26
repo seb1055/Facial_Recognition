@@ -1,2 +1,2 @@
-# Greeter_OpenFace
+# Facial_Recognition
 # Manny: testing version control
