@@ -39,9 +39,12 @@ int main( int argc, const char** argv )
     VideoCapture capture;
 
     //use for facial rec
-    face_cascade.load("/home/mvassos/projects/openface/Facial_Recognition/haarcascade_frontalface_alt.xml");
-    eyes_cascade.load("/home/mvassos/projects/openface/Facial_Recognition/haarcascade_eye_tree_eyeglasses.xml");
-    loadModel("/home/mvassos/projects/openface/csv_maker/faces.csv");
+
+    face_cascade.load("face_model/haarcascade_frontalface_alt.xml");
+    eyes_cascade.load("face_model/haarcascade_eye_tree_eyeglasses.xml");
+    loadModel("/home/seb/Desktop/seb_faces/faces.csv");
+
+
 
     startCapture(capture);
 
@@ -60,7 +63,6 @@ void startCapture(VideoCapture capture){
     if ( ! capture.isOpened() ) { printf("--(!)Error opening video capture\n"); exit(-1);}
     while ( capture.read(frame) )
     {
-        cout<<(frame.size)<<endl;
         if( frame.empty() )
         {
             printf(" --(!) No captured frame -- Break!");
@@ -72,6 +74,8 @@ void startCapture(VideoCapture capture){
         if( waitKey(10) == 27 ) { break; } // escape
 
     }
+
+    capture.release();
 
 }
 
