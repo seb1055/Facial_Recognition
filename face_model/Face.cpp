@@ -10,8 +10,12 @@ Rect Face::getFaceBox() { return this->face_box; }
 
 vector<Rect> Face::getEyes() { return this->eye_boxs; }
 
-void Face::setFaceBox(Rect face) { this->face_box; }
+void Face::setFaceBox(Rect face) { this->face_box = face; }
 
-void Face::setEyeBoxs(vector<Rect> eyes) { this->eye_boxs; }
+void Face::setEyeBoxes(vector<Rect> eyes) { this->eye_boxs = eyes; }
 
-void Face::setName(string name) { this->name; }
+void Face::setName(string name) { this->name = name; }
+
+Face::Face() {
+
+}

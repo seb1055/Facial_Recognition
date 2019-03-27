@@ -16,7 +16,7 @@ public:
 
     void setFaceBox(Rect face);
 
-    void setEyeBoxs(vector<Rect> eyes);
+    void setEyeBoxes(vector<Rect> eyes);
 
     void setName(string name);
 

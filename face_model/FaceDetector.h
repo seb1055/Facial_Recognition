@@ -4,10 +4,18 @@
 #include "opencv2/objdetect.hpp"
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgproc.hpp"
-#include "opencv2/core.hpp"
+#include "opencv2/objdetect.hpp"
+#include "opencv2/highgui.hpp"
+#include "opencv2/imgproc.hpp"
 #include "opencv2/face.hpp"
 #include <opencv2/core_detect.hpp>
+
 #include "Face.h"
+#include <iostream>
+#include <fstream>
+
+#define EYE_CASCADE "face_model/haarcascade_eye_tree_eyeglasses.xml"
+#define FACE_CASCADE "face_model/haarcascade_frontalface_alt.xml"
 
 
 #ifndef GREETER_OPENFACE_FACEDETECTOR_H
@@ -23,12 +31,17 @@ class FaceDetector {
 
 
 public:
-    FaceDetector(string face_casecade, string eye_cascade, string csv, vector<Mat> training_img, vector<int> labels);
+    FaceDetector();
 
+    vector<Face> findFaces(Mat mat);
+
+    string recongizeFace(Mat mat);
     vector<Face> getFaces();
 
 private:
+    Mat norm_0_255(InputArray _src);
 
+    void read_csv(const string &filename, vector<Mat> &images, vector<int> &labels, char separator);
     CascadeClassifier face_cascade;
     CascadeClassifier eyes_cascade;
     vector<Mat> images;
