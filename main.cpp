@@ -16,10 +16,10 @@ using namespace cv::face;
 void detectAndDisplay( Mat frame );
 void startCapture(VideoCapture capture);
 
-void loadModel(string filepath);
+void loadModel(const string &filepath);
 static void read_csv(const string& filename, vector<Mat>& images, vector<int>& labels, char separator = ';');
 
-string reconizeFace(Mat frame);
+string reconizeFace(const Mat &frame);
 static Mat norm_0_255(InputArray _src);
 
 CascadeClassifier face_cascade;
@@ -49,7 +49,7 @@ int main( int argc, const char** argv )
     return 0;
 }
 
-void loadModel(const string filepath) {
+void loadModel(const string &filepath) {
     read_csv(filepath, images, labels);
     model->train(images, labels);
     cout << "Model Trained" << endl;
@@ -91,14 +91,14 @@ void detectAndDisplay( Mat frame )
         equalizeHist(frame_gray, frame_gray);
         //-- Detect faces
         face_cascade.detectMultiScale(frame_gray, faces, 1.1, 2, 0 | CASCADE_SCALE_IMAGE, Size(60, 60));
-        for (size_t i = 0; i < faces.size(); i++) {
-            Point p1(faces[i].x, faces[i].y);
-            Point p2(faces[i].x + faces[i].width, faces[i].y + faces[i].height);
+        for (auto &face : faces) {
+            Point p1(face.x, face.y);
+            Point p2(face.x + face.width, face.y + face.height);
 
 
             //NOT GOOD PRAC FIND BETTER
-            if (faces[i].width > 0) {
-                frame_zoom = frame(Rect2d(faces[i].x, faces[i].y, faces[i].width, faces[i].height));
+            if (face.width > 0) {
+                frame_zoom = frame(Rect2d(face.x, face.y, face.width, face.height));
 
                 frame_zoom.copyTo(frame(Rect(0, 0, frame_zoom.rows, frame_zoom.cols)));
                 person_name = reconizeFace(frame);
@@ -106,7 +106,7 @@ void detectAndDisplay( Mat frame )
                 rectangle(frame, p1, p2, Scalar(255, 0, 255), 4, 8, 0);
                 putText(frame, person_name, p1, FONT_HERSHEY_SIMPLEX, 1, Scalar(97, 255, 0), 2);
 
-                Mat faceROI = frame_gray(faces[i]);
+                Mat faceROI = frame_gray(face);
 
                 //-- In each face, detect eyes
                 eyes_cascade.detectMultiScale(faceROI, eyes, 1.1, 2, 0 | CASCADE_SCALE_IMAGE, Size(30, 30));
@@ -114,10 +114,10 @@ void detectAndDisplay( Mat frame )
             }
 
 
-            for (size_t j = 0; j < eyes.size(); j++) {
-                Point eye_center(faces[i].x + eyes[j].x + eyes[j].width / 2,
-                                 faces[i].y + eyes[j].y + eyes[j].height / 2);
-                int radius = cvRound((eyes[j].width + eyes[j].height) * 0.25);
+            for (auto &eye : eyes) {
+                Point eye_center(face.x + eye.x + eye.width / 2,
+                                 face.y + eye.y + eye.height / 2);
+                int radius = cvRound((eye.width + eye.height) * 0.25);
                 circle(frame, eye_center, radius, Scalar(255, 0, 0), 4, 8, 0);
             }
 
@@ -130,7 +130,7 @@ void detectAndDisplay( Mat frame )
 
 }
 
-string reconizeFace(Mat frame) {
+string reconizeFace(const Mat &frame) {
 
 
     Mat testimg = norm_0_255(frame);
