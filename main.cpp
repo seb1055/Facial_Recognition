@@ -30,6 +30,8 @@ vector<Mat> images;
 vector<int> labels;
 Ptr<EigenFaceRecognizer> model = EigenFaceRecognizer::create();
 
+bool skipframe = 0;
+
 
 
 int main( int argc, const char** argv )
@@ -66,6 +68,7 @@ void startCapture(VideoCapture capture){
         }
         //-- 3. Apply the classifier to the frame
         detectAndDisplay(frame);
+        skipframe = ~skipframe;
         if( waitKey(10) == 27 ) { break; } // escape
 
     }
@@ -75,47 +78,53 @@ void startCapture(VideoCapture capture){
 
 void detectAndDisplay( Mat frame )
 {
+
+    //TODO alot of overhead here
     std::vector<Rect> faces;
+    std::vector<Rect> eyes;
     Mat frame_gray;
     Mat frame_zoom = frame;
     string person_name;
 
-    cvtColor( frame, frame_gray, COLOR_BGR2GRAY );
-    equalizeHist( frame_gray, frame_gray );
-    //-- Detect faces
-    face_cascade.detectMultiScale( frame_gray, faces, 1.1, 2, 0|CASCADE_SCALE_IMAGE, Size(60, 60) );
-    for ( size_t i = 0; i < faces.size(); i++ )
-    {
-        Point p1(faces[i].x, faces[i].y);
-        Point p2(faces[i].x + faces[i].width, faces[i].y + faces[i].height);
+    if (skipframe) { //check every other frame
+        cvtColor(frame, frame_gray, COLOR_BGR2GRAY);
+        equalizeHist(frame_gray, frame_gray);
+        //-- Detect faces
+        face_cascade.detectMultiScale(frame_gray, faces, 1.1, 2, 0 | CASCADE_SCALE_IMAGE, Size(60, 60));
+        for (size_t i = 0; i < faces.size(); i++) {
+            Point p1(faces[i].x, faces[i].y);
+            Point p2(faces[i].x + faces[i].width, faces[i].y + faces[i].height);
 
 
+            //NOT GOOD PRAC FIND BETTER
+            if (faces[i].width > 0) {
+                frame_zoom = frame(Rect2d(faces[i].x, faces[i].y, faces[i].width, faces[i].height));
 
-        //NOT GOOD PRAC FIND BETTER
-        if(faces[i].width > 0 ) {
-            frame_zoom = frame(Rect2d(faces[i].x, faces[i].y, faces[i].width, faces[i].height));
+                frame_zoom.copyTo(frame(Rect(0, 0, frame_zoom.rows, frame_zoom.cols)));
+                person_name = reconizeFace(frame);
 
-            frame_zoom.copyTo(frame(Rect(0, 0, frame_zoom.rows, frame_zoom.cols)));
-            person_name = reconizeFace(frame);
+                rectangle(frame, p1, p2, Scalar(255, 0, 255), 4, 8, 0);
+                putText(frame, person_name, p1, FONT_HERSHEY_SIMPLEX, 1, Scalar(97, 255, 0), 2);
+
+                Mat faceROI = frame_gray(faces[i]);
+
+                //-- In each face, detect eyes
+                eyes_cascade.detectMultiScale(faceROI, eyes, 1.1, 2, 0 | CASCADE_SCALE_IMAGE, Size(30, 30));
+
+            }
+
+
+            for (size_t j = 0; j < eyes.size(); j++) {
+                Point eye_center(faces[i].x + eyes[j].x + eyes[j].width / 2,
+                                 faces[i].y + eyes[j].y + eyes[j].height / 2);
+                int radius = cvRound((eyes[j].width + eyes[j].height) * 0.25);
+                circle(frame, eye_center, radius, Scalar(255, 0, 0), 4, 8, 0);
+            }
+
+
         }
-
-        rectangle(frame, p1,p2, Scalar(255,0,255),4 , 8 , 0);
-        putText(frame, person_name, p1, FONT_HERSHEY_SIMPLEX, 1, Scalar(97, 255, 0), 2);
-
-
-        Mat faceROI = frame_gray( faces[i] );
-        std::vector<Rect> eyes;
-        //-- In each face, detect eyes
-        eyes_cascade.detectMultiScale( faceROI, eyes, 1.1, 2, 0 |CASCADE_SCALE_IMAGE, Size(30, 30) );
-        for ( size_t j = 0; j < eyes.size(); j++ )
-        {
-            Point eye_center( faces[i].x + eyes[j].x + eyes[j].width/2, faces[i].y + eyes[j].y + eyes[j].height/2 );
-            int radius = cvRound( (eyes[j].width + eyes[j].height)*0.25 );
-            circle( frame, eye_center, radius, Scalar( 255, 0, 0 ), 4, 8, 0 );
-        }
-
-
     }
+
     //-- Show what you got
     imshow( window_name, frame );
 
