@@ -19,7 +19,7 @@ void startCapture(VideoCapture capture);
 void loadModel(const string &filepath);
 static void read_csv(const string& filename, vector<Mat>& images, vector<int>& labels, char separator = ';');
 
-string reconizeFace(const Mat &frame);
+string reconizeFace(Mat &frame);
 static Mat norm_0_255(InputArray _src);
 
 CascadeClassifier face_cascade;
@@ -39,10 +39,9 @@ int main( int argc, const char** argv )
     VideoCapture capture;
 
     //use for facial rec
-    face_cascade.load("/home/seb/Projects/Greeter_OpenFace/haarcascade_frontalface_alt.xml");
-    eyes_cascade.load("/home/seb/Projects/Greeter_OpenFace/haarcascade_eye_tree_eyeglasses.xml");
-    loadModel("/home/seb/Desktop/seb_faces/faces.csv");
-
+    face_cascade.load("/home/mvassos/projects/openface/Facial_Recognition/haarcascade_frontalface_alt.xml");
+    eyes_cascade.load("/home/mvassos/projects/openface/Facial_Recognition/haarcascade_eye_tree_eyeglasses.xml");
+    loadModel("/home/mvassos/projects/openface/csv_maker/faces.csv");
 
     startCapture(capture);
 
@@ -61,6 +60,7 @@ void startCapture(VideoCapture capture){
     if ( ! capture.isOpened() ) { printf("--(!)Error opening video capture\n"); exit(-1);}
     while ( capture.read(frame) )
     {
+        cout<<(frame.size)<<endl;
         if( frame.empty() )
         {
             printf(" --(!) No captured frame -- Break!");
@@ -130,13 +130,13 @@ void detectAndDisplay( Mat frame )
 
 }
 
-string reconizeFace(const Mat &frame) {
+string reconizeFace(Mat &frame) {
 
 
     Mat testimg = norm_0_255(frame);
 
+     int predictedlabel = model->predict(testimg);
 
-    int predictedlabel = model->predict(testimg);
 
     switch (predictedlabel) {
         case 0:
@@ -177,7 +177,7 @@ static Mat norm_0_255(InputArray _src) {
     // Create and return normalized image:
     Mat dst;
     Size size(640, 480);
-    resize(src, dst, size);
-    cvtColor(_src, dst, COLOR_BGR2GRAY);
+    resize(src, dst, size, 0, 0, INTER_LINEAR);
+    cvtColor(dst, dst, COLOR_BGR2GRAY);
     return dst;
 }
