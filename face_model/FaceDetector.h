@@ -2,11 +2,6 @@
 // Created by seb on 3/26/19.
 //
 #include "opencv2/objdetect.hpp"
-#include "opencv2/highgui.hpp"
-#include "opencv2/imgproc.hpp"
-#include "opencv2/objdetect.hpp"
-#include "opencv2/highgui.hpp"
-#include "opencv2/imgproc.hpp"
 #include "opencv2/face.hpp"
 #include <opencv2/core_detect.hpp>
 
@@ -33,15 +28,15 @@ class FaceDetector {
 public:
     FaceDetector();
 
-    vector<Face> findFaces(Mat mat);
+    vector<Face> findFaces(const Mat &mat);
 
-    string recongizeFace(Mat mat);
+    string recognizeFace(const Mat &mat);
     vector<Face> getFaces();
 
 private:
-    Mat norm_0_255(InputArray _src);
+    static Mat norm_0_255(InputArray _src);
 
-    void read_csv(const string &filename, vector<Mat> &images, vector<int> &labels, char separator);
+    static void read_csv(const string &filename, vector<Mat> &images, vector<int> &labels, char separator);
     CascadeClassifier face_cascade;
     CascadeClassifier eyes_cascade;
     vector<Mat> images;

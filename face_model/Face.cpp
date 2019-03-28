@@ -1,3 +1,5 @@
+#include <utility>
+
 //
 // Created by seb on 3/26/19.
 //
@@ -10,12 +12,10 @@ Rect Face::getFaceBox() { return this->face_box; }
 
 vector<Rect> Face::getEyes() { return this->eye_boxs; }
 
-void Face::setFaceBox(Rect face) { this->face_box = face; }
+void Face::setFaceBox(Rect face) { this->face_box = std::move(face); }
 
-void Face::setEyeBoxes(vector<Rect> eyes) { this->eye_boxs = eyes; }
+void Face::setEyeBoxes(vector<Rect> eyes) { this->eye_boxs = std::move(eyes); }
 
-void Face::setName(string name) { this->name = name; }
+void Face::setName(string name) { this->name = std::move(name); }
 
-Face::Face() {
-
-}
+Face::Face() = default;

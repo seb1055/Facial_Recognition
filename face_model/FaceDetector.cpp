@@ -15,8 +15,7 @@ vector<Face> FaceDetector::getFaces() {
     return vector<Face>();
 }
 
-//TODO add eye support
-vector<Face> FaceDetector::findFaces(Mat frame) {
+vector<Face> FaceDetector::findFaces(const Mat &frame) {
     std::vector<Rect> face_boxes;
     std::vector<Rect> eye_boxes;
     std::vector<Face> face_list;
@@ -31,34 +30,26 @@ vector<Face> FaceDetector::findFaces(Mat frame) {
     for (auto &face : face_boxes) {
 
         Face detected_face;
-        //NOT GOOD PRAC FIND BETTER
-        if (face.width > 0) {
+        if (!face.empty()) {
             detected_face.setFaceBox(face);
             eyes_cascade.detectMultiScale(frame_gray, eye_boxes, 1.1, 2, 0 | CASCADE_SCALE_IMAGE, Size(30, 30));
             detected_face.setEyeBoxes(eye_boxes);
-            detected_face.setName(recongizeFace(frame));
+            detected_face.setName(recognizeFace(frame));
             face_list.push_back(detected_face);
-
         }
     }
     return face_list;
 }
 
-string FaceDetector::recongizeFace(Mat frame) {
-    Mat testimg = norm_0_255(frame);
+string FaceDetector::recognizeFace(const Mat &frame) {
+    Mat test_img = norm_0_255(frame);
 
-    int predictedlabel = model->predict(testimg);
-
-
-    switch (predictedlabel) {
+    int label = model->predict(test_img);
+    switch (label) {
         case 0:
-
             return "SEB";
-
         case 1:
             return "CHASE";
-
-
         default:
             return "N/A";
     }
